@@ -3,12 +3,19 @@ from PyQt6.QtWidgets import *
 from pytube import YouTube
 
 
-def download():
+def upgrade(video, arg2, progress_end):
+    (100 - int(progress_end / (video.filesize / 100)))
 
+
+def download(link):
     path = 'D:/Code'
-    settings = {'res': "720p", 'mine_type': 'video/mp4'}
-    video = YouTube(link)
+    settings = {'res': "720p", 'file_extension': 'mp4'}
+    video = YouTube(link, on_progress_callback=upgrade)
     video.streams.filter(**settings).order_by('fps').first().download(path)
+
+
+def download_button():
+    download(MainWindow.getLink())
 
 
 class MainWindow(QMainWindow):
@@ -19,15 +26,19 @@ class MainWindow(QMainWindow):
 
         DownloadButton = QPushButton("download".upper())
         DownloadButton.setCheckable(True)
-        DownloadButton.clicked.connect(download)
+        DownloadButton.clicked.connect(download_button)
+
+        progressbar = QProgressBar(self)
+        progressbar.resize(50, 50, 250, 30)
+        progressbar.setValue(0)
 
         self.setFixedSize(QSize(500, 300))
         self.setWindowTitle('YT download')
-        self.input = QLineEdit()
-        self.input.textChanged.connect(self.setLink)
+        self.link = QLineEdit()
+        self.link.textChanged.connect(self.setLink)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.input)
+        layout.addWidget(self.link)
         layout.addWidget(DownloadButton)
 
         container = QWidget()
@@ -38,6 +49,14 @@ class MainWindow(QMainWindow):
     @staticmethod
     def setLink(link):
         MainWindow._link = link
+
+    @staticmethod
+    def getLink():
+        print(MainWindow._link)
+        return MainWindow._link
+
+    def setProgressBar(self, value):
+        self.progressbar.setValue(value)
 
 
 app = QApplication([])
