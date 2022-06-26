@@ -1,30 +1,43 @@
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton
-import pytube
+from PyQt6.QtWidgets import *
+from pytube import YouTube
 
 
-def download_video(link: str, path: str, size: tuple, data_format: str):
-    print('Downloading...')
+def download():
+
+    path = 'D:/Code'
+    settings = {'res': "720p", 'mine_type': 'video/mp4'}
+    video = YouTube(link)
+    video.streams.filter(**settings).order_by('fps').first().download(path)
 
 
 class MainWindow(QMainWindow):
-
-    def download(self):
-        link = ""
-        path = ""
-        settings = {'size': (350, 123), 'data_format': 'mp4'}
-        download_video(link, path, **settings)
+    _link = str()
 
     def __init__(self):
         super().__init__()
 
         DownloadButton = QPushButton("download".upper())
         DownloadButton.setCheckable(True)
-        DownloadButton.clicked.connect(self.download)
+        DownloadButton.clicked.connect(download)
 
         self.setFixedSize(QSize(500, 300))
         self.setWindowTitle('YT download')
-        self.setCentralWidget(DownloadButton)
+        self.input = QLineEdit()
+        self.input.textChanged.connect(self.setLink)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.input)
+        layout.addWidget(DownloadButton)
+
+        container = QWidget()
+        container.setLayout(layout)
+
+        self.setCentralWidget(container)
+
+    @staticmethod
+    def setLink(link):
+        MainWindow._link = link
 
 
 app = QApplication([])
