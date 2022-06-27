@@ -1,21 +1,7 @@
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import *
 from pytube import YouTube
-
-
-def upgrade(video, arg2, progress_end):
-    (100 - int(progress_end / (video.filesize / 100)))
-
-
-def download(link):
-    path = 'D:/Code'
-    settings = {'res': "720p", 'file_extension': 'mp4'}
-    video = YouTube(link, on_progress_callback=upgrade)
-    video.streams.filter(**settings).order_by('fps').first().download(path)
-
-
-def download_button():
-    download(MainWindow.getLink())
+import asyncio
 
 
 class MainWindow(QMainWindow):
@@ -24,13 +10,14 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.percent_loaded = 0
+
         DownloadButton = QPushButton("download".upper())
         DownloadButton.setCheckable(True)
-        DownloadButton.clicked.connect(download_button)
+        DownloadButton.clicked.connect(self.download)
 
-        progressbar = QProgressBar(self)
-        progressbar.resize(50, 50, 250, 30)
-        progressbar.setValue(0)
+        self.progressbar = QProgressBar(self)
+        self.progressbar.setValue(self.percent_loaded)
 
         self.setFixedSize(QSize(500, 300))
         self.setWindowTitle('YT download')
@@ -39,12 +26,26 @@ class MainWindow(QMainWindow):
 
         layout = QVBoxLayout()
         layout.addWidget(self.link)
+        layout.addWidget(self.progressbar)
         layout.addWidget(DownloadButton)
 
         container = QWidget()
         container.setLayout(layout)
 
         self.setCentralWidget(container)
+
+    def upgrade(self, video, arg2, progress_end):
+        percent = 100 - int(progress_end / (video.filesize / 100))
+        print(percent)
+        self.progressbar.setValue(percent)
+
+    def download(self):
+        link = MainWindow._link
+        print(link)
+        path = 'D:/Code'
+        settings = {'res': "720p", 'file_extension': 'mp4'}
+        video = YouTube(link, on_progress_callback=self.upgrade)
+        video.streams.filter(**settings).order_by('fps').first().download(path)
 
     @staticmethod
     def setLink(link):
